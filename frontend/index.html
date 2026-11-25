@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Jobs</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="header">
+  <div class="container">
+    <h1 class="site-title">Jobs<span class="title-dot">.</span></h1>
+    <p class="site-sub">Take a quick skill test. Get matched to real jobs.</p>
+  </div>
+</header>
+
+<main class="container">
+
+  <p class="error-strip" id="error-strip" role="alert" hidden></p>
+
+  <section id="start-view" class="view">
+    <h2 class="view-heading">What role are you looking for?</h2>
+    <p class="view-lead">Enter a job title and we will generate a short skill test tailored to that role. Your answers get matched against real listings from Adzuna.</p>
+
+    <form id="start-form" class="start-form">
+      <div class="field">
+        <label for="job-title">Job title</label>
+        <input type="text" id="job-title" name="job_title" placeholder="e.g. backend engineer" required>
+      </div>
+      <div class="field">
+        <label for="country">Country</label>
+        <select id="country" name="country">
+          <option value="gb">United Kingdom</option>
+          <option value="us">United States</option>
+          <option value="ca">Canada</option>
+          <option value="au">Australia</option>
+          <option value="de">Germany</option>
+          <option value="fr">France</option>
+          <option value="za">South Africa</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="location">Location (optional)</label>
+        <input type="text" id="location" name="location" placeholder="e.g. London">
+      </div>
+      <div class="field">
+        <label for="cv-file">Your CV (optional, but recommended)</label>
+        <div class="cv-upload">
+          <label class="upload-btn" for="cv-file">
+            <span>Upload PDF or DOCX</span>
+            <input type="file" id="cv-file" accept=".pdf,.docx,.doc" hidden>
+          </label>
+          <span class="upload-status" id="upload-status"></span>
+        </div>
+        <textarea id="cv-text" name="cv_text" rows="8" placeholder="Or paste your CV text here so we can tailor the test to your real experience and give you concrete CV improvement advice."></textarea>
+        <p class="field-hint">Everything stays in your browser and this request. We don't store anything.</p>
+      </div>
+      <button type="submit" class="btn btn-primary">Start the test</button>
+    </form>
+  </section>
+
+  <section id="questionnaire-view" class="view" hidden>
+    <div class="quiz-header">
+      <p class="quiz-progress-label">Question <span id="q-current">1</span> of <span id="q-total">5</span></p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <h2 class="question-text" id="question-text"></h2>
+
+    <div class="options" id="options"></div>
+
+    <div class="quiz-footer">
+      <button type="button" class="btn btn-ghost" id="restart-btn">Start over</button>
+    </div>
+  </section>
+
+  <section id="loading-view" class="view" hidden>
+    <div class="loading">
+      <div class="loading-dots"><span></span><span></span><span></span></div>
+      <p class="loading-text" id="loading-text">Grading your answers and pulling matched jobs from Adzuna. Give it a few seconds.</p>
+    </div>
+  </section>
+
+  <section id="results-view" class="view" hidden>
+
+    <article class="qual-card">
+      <div class="qual-top">
+        <div class="qual-score">
+          <span class="score-number" id="score-number">0</span>
+          <span class="score-max">/100</span>
+        </div>
+        <div class="qual-meta">
+          <p class="qual-label">Your qualification</p>
+          <p class="qual-level" id="qual-level">—</p>
+        </div>
+      </div>
+
+      <div class="qual-grid">
+        <div class="qual-column">
+          <h3 class="qual-heading strengths-heading">Strengths</h3>
+          <ul class="qual-list" id="strengths-list"></ul>
+        </div>
+        <div class="qual-column">
+          <h3 class="qual-heading gaps-heading">Gaps</h3>
+          <ul class="qual-list" id="gaps-list"></ul>
+        </div>
+      </div>
+
+      <p class="qual-feedback" id="qual-feedback"></p>
+    </article>
+
+    <article class="cv-card" id="cv-card" hidden>
+      <h2 class="cv-heading">How to improve your CV</h2>
+      <ul class="cv-list" id="cv-list"></ul>
+    </article>
+
+    <section class="section">
+      <div class="section-head">
+        <h2 class="section-title">Your matched jobs</h2>
+        <p class="section-count" id="jobs-count" aria-live="polite"></p>
+      </div>
+
+      <div class="toolbar" id="jobs-toolbar">
+        <div class="field toolbar-search">
+          <label for="filter-text">Search these results</label>
+          <input type="search" id="filter-text" placeholder="Company, title, skill, city" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="sort-by">Sort by</label>
+          <select id="sort-by">
+            <option value="match">Best match</option>
+            <option value="salary">Highest salary</option>
+            <option value="date">Newest first</option>
+            <option value="company">Company A to Z</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="min-match">Minimum match</label>
+          <select id="min-match">
+            <option value="0">Any</option>
+            <option value="40">40% and up</option>
+            <option value="70">70% and up</option>
+          </select>
+        </div>
+        <label class="toolbar-check">
+          <input type="checkbox" id="salary-only">
+          <span>Salary listed</span>
+        </label>
+      </div>
+
+      <div class="results-list" id="results-list"></div>
+      <div class="empty-state" id="jobs-empty" hidden>
+        <p>No listings match those filters.</p>
+        <button type="button" class="btn btn-ghost" id="clear-filters">Clear filters</button>
+      </div>
+    </section>
+
+    <section class="section">
+      <h2 class="section-title">What this means</h2>
+      <div class="metrics-grid" id="metrics-grid"></div>
+    </section>
+
+    <div class="results-footer">
+      <button type="button" class="btn btn-ghost" id="restart-btn-2">Take another test</button>
+    </div>
+  </section>
+
+
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <p>Listings from <a href="https://www.adzuna.com" target="_blank" rel="noopener">Adzuna</a>. Skill assessment powered by <a href="https://groq.com" target="_blank" rel="noopener">Groq</a>. CV parsing by <a href="https://apilayer.com" target="_blank" rel="noopener">APILayer</a>. Not affiliated with any of them.</p>
+    <p class="served-by" id="served-by" hidden></p>
+  </div>
+</footer>
+
+<template id="job-card-template">
+  <article class="job-card">
+    <div class="job-card-top">
+      <div class="job-logo"></div>
+      <div class="job-headline">
+        <h3 class="job-title"></h3>
+        <p class="job-company"></p>
+      </div>
+      <span class="match-badge"></span>
+    </div>
+    <p class="job-meta">
+      <span class="job-location"></span>
+      <span class="job-meta-sep"></span>
+      <span class="job-salary"></span>
+    </p>
+    <p class="job-desc"></p>
+    <div class="job-skills"></div>
+    <div class="job-foot">
+      <span class="job-date"></span>
+      <a class="job-link" target="_blank" rel="noopener">View listing →</a>
+    </div>
+  </article>
+</template>
+
+<script src="script.js"></script>
+</body>
+</html>

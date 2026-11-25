@@ -1,0 +1,43 @@
+name: CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Compile check
+        run: python -m py_compile server.py
+      - name: Unit and endpoint tests
+        run: python -m unittest discover -s tests -v
+
+  # Optional automatic deploy. Only runs on pushes to main, after tests pass,
+  # and only if you set the repository variable DEPLOY_ENABLED to "true" and
+  # add these secrets: WEB01_HOST, WEB02_HOST, SSH_USER, SSH_PRIVATE_KEY.
+  deploy:
+    needs: test
+    if: github.event_name == 'push' && vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    strategy:
+      max-parallel: 1        # one server at a time, so the other keeps serving
+      matrix:
+        host_secret: [WEB01_HOST, WEB02_HOST]
+    steps:
+      - name: Pull and restart on server
+        env:
+          HOST: ${{ secrets[matrix.host_secret] }}
+          USER: ${{ secrets.SSH_USER }}
+          KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$KEY" > ~/.ssh/id_deploy
+          chmod 600 ~/.ssh/id_deploy
+          ssh -i ~/.ssh/id_deploy -o StrictHostKeyChecking=accept-new "$USER@$HOST" \
+            'cd ~/job_search_project_apis && git pull --ff-only && sudo systemctl restart jobs && sleep 2 && curl -fsS http://localhost:8000/api/health'

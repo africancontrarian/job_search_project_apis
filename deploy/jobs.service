@@ -1,0 +1,30 @@
+# systemd unit for the Jobs app. Install on BOTH web01 and web02.
+#
+#   sudo cp deploy/jobs.service /etc/systemd/system/jobs.service
+#   sudo systemctl daemon-reload
+#   sudo systemctl enable --now jobs
+#
+# Change User and the two paths below if your username or clone folder differ.
+
+[Unit]
+Description=Jobs. qualification matched job search (Python backend)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=/home/ubuntu/job_search_project_apis
+ExecStart=/usr/bin/python3 /home/ubuntu/job_search_project_apis/server.py
+Restart=always
+RestartSec=3
+# Print logs straight away so `journalctl -u jobs -f` shows them live.
+Environment=PYTHONUNBUFFERED=1
+
+# Basic hardening. The app only needs to read its own folder.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
