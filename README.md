@@ -124,6 +124,8 @@ python3 -m unittest discover -s tests -v
         Adzuna, Groq and APILayer APIs
 ```
 
+A note on `sudo`: the commands below use it, but some server images log you in as root and do not have `sudo` installed. If you see `sudo: command not found`, run the same command without the word `sudo`. `setup_web.sh` detects this on its own, and if systemd is not available either, it starts the app in the background with `nohup` instead.
+
 Both web servers run identical copies of the app as a systemd service. lb01 only runs nginx and forwards traffic. The API keys live in a `.env` file on web01 and web02 only; they never touch the load balancer or the repository.
 
 ### Step 1: set up web01 (then repeat exactly on web02)
